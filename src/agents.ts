@@ -87,6 +87,15 @@ export const agents: Record<AgentType, AgentConfig> = {
       return existsSync(join(process.cwd(), '.agent')) || existsSync(join(home, '.gemini/antigravity'));
     },
   },
+  droid: {
+    name: 'droid',
+    displayName: 'Droid',
+    skillsDir: '.factory/skills',
+    globalSkillsDir: join(home, '.factory/skills'),
+    detectInstalled: async () => {
+      return existsSync(join(home, '.factory/skills'));
+    },
+  },
 };
 
 export async function detectInstalledAgents(): Promise<AgentType[]> {
