@@ -7,10 +7,12 @@ import { parseSource, cloneRepo, cleanupTempDir } from './git.js';
 import { discoverSkills, getSkillDisplayName } from './skills.js';
 import { installSkillForAgent, isSkillInstalled, getInstallPath } from './installer.js';
 import { detectInstalledAgents, agents } from './agents.js';
+import { track, setVersion } from './telemetry.js';
 import type { Skill, AgentType } from './types.js';
 import packageJson from '../package.json' with { type: 'json' };
 
 const version = packageJson.version;
+setVersion(version);
 
 interface Options {
   global?: boolean;
@@ -40,7 +42,7 @@ async function main(source: string, options: Options) {
   console.log();
   p.intro(chalk.bgCyan.black(' add-skill '));
 
-  let tempDir: string | null = null;
+let tempDir: string | null = null;
 
   try {
     const spinner = p.spinner();
@@ -270,6 +272,15 @@ async function main(source: string, options: Options) {
     console.log();
     const successful = results.filter(r => r.success);
     const failed = results.filter(r => !r.success);
+
+    // Track installation result
+    track({
+      event: 'install',
+      source,
+      skills: selectedSkills.map(s => s.name).join(','),
+      agents: targetAgents.join(','),
+      ...(installGlobally && { global: '1' }),
+    });
 
     if (successful.length > 0) {
       p.log.success(chalk.green(`Successfully installed ${successful.length} skill${successful.length !== 1 ? 's' : ''}`));
